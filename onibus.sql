@@ -21,14 +21,17 @@ CREATE TABLE TelefoneEmpresa
 	CONSTRAINT fkNome FOREIGN KEY (nome) REFERENCES Empresa (nome),
 	CONSTRAINT pkTelefoneEmpresa PRIMARY KEY (nome, numero)
 );
-
+drop table Linha
 CREATE TABLE Linha
 (
 	codLinha INT NOT NULL,
 	nomeLinha VARCHAR(50) NOT NULL,
-	sentido VARCHAR(50) NOT NULL,
-	CONSTRAINT pkLinha PRIMARY KEY (codLinha)
+	codQuadro int NOT NULL,
+	CONSTRAINT nomeUnico UNIQUE(nomeLinha),
+	CONSTRAINT pkLinha PRIMARY KEY (codLinha),
+	CONSTRAINT fkLinhacodQuadro FOREIGN KEY (codQuadro) REFERENCES QuadroHorario(codQuadro)
 );
+
 CREATE TABLE EmpresaLinha
 (
 	nome VARCHAR(50) NOT NULL,
@@ -45,57 +48,80 @@ CREATE TABLE Logradouro
 	CONSTRAINT pklogradouro PRIMARY KEY(codLog)
 );
 
-CREATE TABLE Itinerario
+CREATE TABLE Passa
 (
-	nomeLog varchar(20)NOT NULL,
+	sequencia varchar(20)NOT NULL,
 	codLog INT NOT NULL,
 	codLinha INT NOT NULL,
+	sentido varchar(20)NOT NULL,
 	CONSTRAINT fkItinerarioCodLog FOREIGN KEY (codLog) REFERENCES Logradouro (codLog),
 	CONSTRAINT fkItinerarioCodLinha FOREIGN KEY (codLinha) REFERENCES Linha (codLinha),
-	CONSTRAINT pkItinerario PRIMARY KEY (codLog, codLinha),
+	CONSTRAINT pkItinerario PRIMARY KEY (codLog, codLinha,sequencia),
 );
-
 CREATE TABLE Horario
 (
 	diaSemana VARCHAR(20) NOT NULL,
-	horario CHAR(5) NOT NULL,
-	codLinha INT NOT NULL,
-	CONSTRAINT fkHorarioCodLinha FOREIGN KEY (codLinha) REFERENCES Linha (codLinha),
-	CONSTRAINT pkHorario PRIMARY KEY (diaSemana, horario, codLinha)
+	hora CHAR(5) NOT NULL,
+	codQuadro INT NOT NULL,
+	CONSTRAINT fkHorarioCodLinha FOREIGN KEY (codQuadro) REFERENCES QuadroHorario (codQuadro),
+	CONSTRAINT pkHorario PRIMARY KEY (diaSemana, hora, codQuadro)
+);
+CREATE TABLE QuadroHorario
+(
+	codQuadro int NOT NULL,
+	CONSTRAINT pkQuadroHorario PRIMARY KEY (codQuadro)
 );
 
 INSERT INTO Empresa
 VALUES ('Papini', 'Araraquara', 'Rua 24', '66', 'Apartamento 6 andar', 'SP', '15456789', 'Centro', 'papini.com');
 
 INSERT INTO Linha
-VALUES (8, 'Imperador', 'Terminal-Imperador');
+VALUES (4, 'Imperador',4);
 
 INSERT INTO Logradouro
 VALUES (7, 'Padre Francisco');
 
-INSERT INTO Itinerario
-VALUES ('Av Carlos Bersanetti',32, 1);
+INSERT INTO Passa
+VALUES (4,32,1,'Terminal');
 
+insert into QuadroHorario
+VALUES(4)
+
+select * from EmpresaLinha
 insert into Horario
-VALUES ('dias uteis', '19:00', 8);
+VALUES ('Domingo/Feriado','07:00', 4);
 
 INSERT INTO EmpresaLinha
-VALUES ('Isabela', 8);
+VALUES ('Papini', 4);
 
+/*  a) Obter todas as linhas atendidas por uma determinada empresa, dado o nome dessa empresa 
 select nomeLog,codlog from Logradouro,Linha;
-SELECT linha.nomeLinha, l.codLinha /*  a) Obter todas as linhas atendidas por uma determinada empresa, dado o nome dessa empresa */
+SELECT linha.nomeLinha, l.codLinha 
 FROM EmpresaLinha l, Linha 
-WHERE l.nome = 'Papini' AND Linha.codLinha = L.codLinha;
+WHERE l.nome = 'Papini' AND Linha.codLinha = L.codLinha;*/
 
-/* b) Obter o itinerário de uma determinada linha de ônibus, dado o Nome (Identificação) dessa linha.   */
-Select x.nomelog from Itinerario x join Linha l ON l.nomeLinha = 'melhado' AND l.codLinha = x.codLinha
+Select l.nomeLinha,e.nome
+from Linha l,EmpresaLinha e
+where e.nome ='Isabela' AND l.codLinha = e.codLinha;
 
- /* c) Obter o quadro de horário de uma determinada linha, dado seu Nome */
-Select h.diaSemana, h.horario from Horario h join Linha l ON l.nomeLinha = 'melhado' And h.codLinha = l.codLinha
 
-/*d) Obter  as  linhas  de  ônibus/empresa  quepassam  por  um  determinado logradouro, dado o nome desse logradouro. */
+/* b) Obter o itinerário de uma determinada linha de ônibus, dado o Nome (Identificação) dessa linha.   
+Select x.nomelog from Itinerario x join Linha l ON l.nomeLinha = 'melhado' AND l.codLinha = x.codLinha*/
+Select x.sentido,x.codLog from Passa x join Linha l ON l.nomeLinha = 'Valle Verde' AND l.codLinha = x.codLinha
+
+ /* c) Obter o quadro de horário de uma determinada linha, dado seu Nome 
+Select h.diaSemana, h.horario from Horario h join Linha l ON l.nomeLinha = 'melhado' And h.codLinha = l.codLinha*/
+Select h.diaSemana,h.hora
+from Horario h join Linha l ON l.nomeLinha = 'Valle Verde' AND h.codQuadro = l.codLinha
+select * from Logradouro
+
+/*d) Obter  as  linhas  de  ônibus/empresa  quepassam  por  um  determinado logradouro, dado o nome desse logradouro. 
 SELECT l.nomeLinha,e.nome
 from EmpresaLinha e ,Linha l join Itinerario x  
 ON  x.nomeLog = 'Padre Francisco' and x.codLinha = l.codLinha 
-where e.codLinha = l.codLinha
+where e.codLinha = l.codLinha*/
+select l.nomeLinha
+from Linha l,Passa p join Logradouro lo ON lo.nomeLog = 'Av.potugal' AND p.codLog = lo.codLog
+where l.codLinha = p.codLinha
+
 
